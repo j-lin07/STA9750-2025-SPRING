@@ -137,10 +137,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#data-acquisition-libraries" id="toc-data-acquisition-libraries" class="nav-link" data-scroll-target="#data-acquisition-libraries">1. Data Acquisition &amp; Libraries</a></li>
   <li><a href="#data-cleaning-filtering" id="toc-data-cleaning-filtering" class="nav-link" data-scroll-target="#data-cleaning-filtering">2. Data Cleaning &amp; Filtering</a></li>
   <li><a href="#spatial-join-aggregation" id="toc-spatial-join-aggregation" class="nav-link" data-scroll-target="#spatial-join-aggregation">3. Spatial Join &amp; Aggregation</a></li>
-  <li><a href="#visualization-interpretation" id="toc-visualization-interpretation" class="nav-link" data-scroll-target="#visualization-interpretation">4. Visualization &amp; Interpretation</a></li>
-  <li><a href="#normalization-by-population-area" id="toc-normalization-by-population-area" class="nav-link" data-scroll-target="#normalization-by-population-area">5. Normalization by Population &amp; Area</a></li>
+  <li><a href="#visualization-interpretation" id="toc-visualization-interpretation" class="nav-link" data-scroll-target="#visualization-interpretation">4. Visualization &amp; Interpretation</a>
+  <ul class="collapse">
+  <li><a href="#what-the-rawcount-maps-tell-us" id="toc-what-the-rawcount-maps-tell-us" class="nav-link" data-scroll-target="#what-the-rawcount-maps-tell-us">What the raw‑count maps tell us</a></li>
   </ul></li>
-  <li><a href="#conclusions-next-steps" id="toc-conclusions-next-steps" class="nav-link" data-scroll-target="#conclusions-next-steps">Conclusions &amp; Next Steps</a></li>
+  <li><a href="#normalization-by-population-area" id="toc-normalization-by-population-area" class="nav-link" data-scroll-target="#normalization-by-population-area">5. Normalization by Population &amp; Area</a></li>
+  <li><a href="#reading-the-normalized-maps" id="toc-reading-the-normalized-maps" class="nav-link" data-scroll-target="#reading-the-normalized-maps">Reading the normalized maps</a></li>
+  </ul></li>
+  <li><a href="#conclusions-next-steps" id="toc-conclusions-next-steps" class="nav-link" data-scroll-target="#conclusions-next-steps">Conclusions&nbsp;&amp;&nbsp;Next&nbsp;Steps</a>
+  <ul class="collapse">
+  <li><a href="#what-we-now-know" id="toc-what-we-now-know" class="nav-link" data-scroll-target="#what-we-now-know">What we now know</a></li>
+  <li><a href="#shortterm-actions" id="toc-shortterm-actions" class="nav-link" data-scroll-target="#shortterm-actions">Short‑term actions</a></li>
+  <li><a href="#longerterm-analytics" id="toc-longerterm-analytics" class="nav-link" data-scroll-target="#longerterm-analytics">Longer‑term analytics</a></li>
+  <li><a href="#policy-research-roadmap" id="toc-policy-research-roadmap" class="nav-link" data-scroll-target="#policy-research-roadmap">Policy &amp; research roadmap</a></li>
+  </ul></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
   </ul>
 </nav>
     </div>
@@ -179,7 +190,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <blockquote class="blockquote">
 <p><strong>Which neighborhoods or boroughs have the highest density of noise complaints?</strong></p>
 </blockquote>
-<p>By integrating three open data sources—311 Noise Complaints, Neighborhood Tabulation Area (NTA) boundaries, and U.S. Census American Community Survey (ACS) population data—we build a fully reproducible pipeline in R/Quarto. We process, aggregate, normalize, and visualize data to reveal the true “noise hotspots” in NYC, measured both by land area and by resident population.</p>
+<p>By integrating three open data sources: 311 Noise Complaints, Neighborhood Tabulation Area (NTA) boundaries, and U.S. Census American Community Survey (ACS) population data, we build a fully reproducible pipeline in R/Quarto. We process, aggregate, normalize, and visualize data to reveal the true “noise hotspots” in NYC, measured both by land area and by resident population so that policy makers can see where targeted mitigation would matter most.</p>
 <p>This document is organized as a reproducible research report:</p>
 <ol type="1">
 <li><strong>Data Acquisition &amp; Libraries</strong><br>
@@ -220,79 +231,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <details class="code-fold">
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># check the structure of the 311 data</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(noise_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>Rows: 686,328
-Columns: 39
-$ `Unique Key`                     &lt;dbl&gt; 56419009, 56419495, 56418047, 5641784…
-$ `Created Date`                   &lt;chr&gt; "01/01/2023 06:28:14 PM", "01/01/2023…
-$ `Closed Date`                    &lt;chr&gt; "01/01/2023 07:58:03 PM", "01/01/2023…
-$ Agency                           &lt;chr&gt; "NYPD", "NYPD", "NYPD", "NYPD", "DEP"…
-$ `Agency Name`                    &lt;chr&gt; "New York City Police Department", "N…
-$ `Complaint Type`                 &lt;chr&gt; "Noise - Residential", "Noise - Stree…
-$ Descriptor                       &lt;chr&gt; "Banging/Pounding", "Loud Music/Party…
-$ `Location Type`                  &lt;chr&gt; "Residential Building/House", "Street…
-$ `Incident Zip`                   &lt;dbl&gt; 11692, 10451, 10019, 10026, 10021, 10…
-$ `Incident Address`               &lt;chr&gt; "56-10 BEACH CHANNEL DRIVE", "462 EAS…
-$ `Street Name`                    &lt;chr&gt; "BEACH CHANNEL DRIVE", "EAST  160 STR…
-$ `Cross Street 1`                 &lt;chr&gt; "BEACH   56 STREET", "ELTON AVENUE", …
-$ `Cross Street 2`                 &lt;chr&gt; "BEACH   57 STREET", "WASHINGTON AVEN…
-$ `Intersection Street 1`          &lt;chr&gt; "BEACH   56 STREET", "ELTON AVENUE", …
-$ `Intersection Street 2`          &lt;chr&gt; "BEACH   57 STREET", "WASHINGTON AVEN…
-$ `Address Type`                   &lt;chr&gt; "ADDRESS", "ADDRESS", "ADDRESS", "ADD…
-$ City                             &lt;chr&gt; "ARVERNE", "BRONX", "NEW YORK", "NEW …
-$ Landmark                         &lt;chr&gt; "BEACH CHANNEL DRIVE", "EAST  160 STR…
-$ `Facility Type`                  &lt;chr&gt; NA, NA, NA, NA, "N/A", NA, NA, NA, NA…
-$ Status                           &lt;chr&gt; "Closed", "Closed", "Closed", "Closed…
-$ `Due Date`                       &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ `Resolution Description`         &lt;chr&gt; "The Police Department responded to t…
-$ `Resolution Action Updated Date` &lt;chr&gt; "01/01/2023 07:58:09 PM", "01/01/2023…
-$ `Community Board`                &lt;chr&gt; "14 QUEENS", "03 BRONX", "05 MANHATTA…
-$ Borough                          &lt;chr&gt; "QUEENS", "BRONX", "MANHATTAN", "MANH…
-$ `X Coordinate (State Plane)`     &lt;dbl&gt; 1043467, 1008587, 989294, 995950, 997…
-$ `Y Coordinate (State Plane)`     &lt;dbl&gt; 156099, 239104, 217303, 232719, 21961…
-$ `Park Facility Name`             &lt;chr&gt; "Unspecified", "Unspecified", "Unspec…
-$ `Park Borough`                   &lt;chr&gt; "QUEENS", "BRONX", "MANHATTAN", "MANH…
-$ `Vehicle Type`                   &lt;chr&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ `Taxi Company Borough`           &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ `Taxi Pick Up Location`          &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ `Bridge Highway Name`            &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ `Bridge Highway Direction`       &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ `Road Ramp`                      &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ `Bridge Highway Segment`         &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ Latitude                         &lt;dbl&gt; 40.59493, 40.82293, 40.76312, 40.8054…
-$ Longitude                        &lt;dbl&gt; -73.78677, -73.91207, -73.98179, -73.…
-$ Location                         &lt;chr&gt; "POINT (-73.78677255696932 40.5949340…</code></pre>
-</div>
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># filter data for a recent time period (e.g., 2022-2025)</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># make sure the created date column is properly parsed. Replace 'Created_Date' with the actual column name.</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>noise_data <span class="ot">&lt;-</span> noise_data <span class="sc">%&gt;%</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Created_Date =</span> <span class="fu">as.Date</span>(<span class="st">`</span><span class="at">Created Date</span><span class="st">`</span>, <span class="at">format =</span> <span class="st">"%m/%d/%Y"</span>)) <span class="sc">%&gt;%</span>  <span class="co"># adjust format if needed</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Created_Date <span class="sc">&gt;=</span> <span class="fu">as.Date</span>(<span class="st">"2022-01-01"</span>))</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># inspect missing values in key columns (e.g., latitude, longitude)</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(noise_data<span class="sc">$</span>Latitude)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-  40.50   40.69   40.74   40.75   40.82   40.91    4251 </code></pre>
-</div>
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(noise_data<span class="sc">$</span>Longitude)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
- -74.25  -73.97  -73.93  -73.92  -73.89  -73.70    4251 </code></pre>
-</div>
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># remove rows without valid location data</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>noise_data <span class="ot">&lt;-</span> noise_data <span class="sc">%&gt;%</span> </span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(Latitude) <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(Longitude))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(noise_data)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># filter data for a recent time period (e.g., 2022-2025)</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># make sure the created date column is properly parsed. Replace 'Created_Date' with the actual column name.</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>noise_data <span class="ot">&lt;-</span> noise_data <span class="sc">%&gt;%</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Created_Date =</span> <span class="fu">as.Date</span>(<span class="st">`</span><span class="at">Created Date</span><span class="st">`</span>, <span class="at">format =</span> <span class="st">"%m/%d/%Y"</span>)) <span class="sc">%&gt;%</span>  <span class="co"># adjust format if needed</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Created_Date <span class="sc">&gt;=</span> <span class="fu">as.Date</span>(<span class="st">"2022-01-01"</span>))</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"># inspect missing values in key columns (e.g., latitude, longitude)</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(noise_data<span class="sc">$</span>Latitude)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(noise_data<span class="sc">$</span>Longitude)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co"># remove rows without valid location data</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>noise_data <span class="ot">&lt;-</span> noise_data <span class="sc">%&gt;%</span> </span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(Latitude) <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(Longitude))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 </section>
@@ -302,83 +255,16 @@ $ Location                         &lt;chr&gt; "POINT (-73.78677255696932 40.594
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># convert noise_data to an sf object (points) using latitude/longitude coordinates </span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>noise_sf <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(noise_data, <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"Longitude"</span>, <span class="st">"Latitude"</span>), <span class="at">crs =</span> <span class="dv">4326</span>, <span class="at">remove =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># load the NYC Neighborhood Tabulation Areas (NTAs) shapefile</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># modify the path to point to unzipped shapefile folder.</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>nta <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"NYC_NTAs/nynta2020.shp"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>Reading layer `nynta2020' from data source 
-  `/Users/jeannelin/STA9750-2025-SPRING/NYC_NTAs/nynta2020.shp' 
-  using driver `ESRI Shapefile'
-Simple feature collection with 262 features and 11 fields
-Geometry type: MULTIPOLYGON
-Dimension:     XY
-Bounding box:  xmin: 913175.1 ymin: 120128.4 xmax: 1067383 ymax: 272844.3
-Projected CRS: NAD83 / New York Long Island (ftUS)</code></pre>
-</div>
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># inspect the spatial dataset</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(nta)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>Simple feature collection with 262 features and 11 fields
-Geometry type: MULTIPOLYGON
-Dimension:     XY
-Bounding box:  xmin: 913175.1 ymin: 120128.4 xmax: 1067383 ymax: 272844.3
-Projected CRS: NAD83 / New York Long Island (ftUS)
-First 10 features:
-   BoroCode BoroName CountyFIPS NTA2020                             NTAName
-1         3 Brooklyn        047  BK0101                          Greenpoint
-2         3 Brooklyn        047  BK0102                        Williamsburg
-3         3 Brooklyn        047  BK0103                  South Williamsburg
-4         3 Brooklyn        047  BK0104                   East Williamsburg
-5         3 Brooklyn        047  BK0201                    Brooklyn Heights
-6         3 Brooklyn        047  BK0202 Downtown Brooklyn-DUMBO-Boerum Hill
-7         3 Brooklyn        047  BK0203                         Fort Greene
-8         3 Brooklyn        047  BK0204                        Clinton Hill
-9         3 Brooklyn        047  BK0261                  Brooklyn Navy Yard
-10        3 Brooklyn        047  BK0301           Bedford-Stuyvesant (West)
-   NTAAbbrev NTAType CDTA2020
-1      Grnpt       0     BK01
-2   Wllmsbrg       0     BK01
-3  SWllmsbrg       0     BK01
-4  EWllmsbrg       0     BK01
-5      BkHts       0     BK02
-6   DwntwnBk       0     BK02
-7      FtGrn       0     BK02
-8    ClntnHl       0     BK02
-9   BkNvyYrd       6     BK02
-10   BdSty_W       0     BK03
-                                                  CDTAName Shape_Leng
-1           BK01 Williamsburg-Greenpoint (CD 1 Equivalent)   28919.56
-2           BK01 Williamsburg-Greenpoint (CD 1 Equivalent)   28098.03
-3           BK01 Williamsburg-Greenpoint (CD 1 Equivalent)   18250.28
-4           BK01 Williamsburg-Greenpoint (CD 1 Equivalent)   43184.80
-5  BK02 Downtown Brooklyn-Fort Greene (CD 2 Approximation)   14312.51
-6  BK02 Downtown Brooklyn-Fort Greene (CD 2 Approximation)   30598.67
-7  BK02 Downtown Brooklyn-Fort Greene (CD 2 Approximation)   23284.62
-8  BK02 Downtown Brooklyn-Fort Greene (CD 2 Approximation)   18102.97
-9  BK02 Downtown Brooklyn-Fort Greene (CD 2 Approximation)   39415.64
-10            BK03 Bedford-Stuyvesant (CD 3 Approximation)   26307.65
-   Shape_Area                       geometry
-1    35321810 MULTIPOLYGON (((1003060 204...
-2    28854314 MULTIPOLYGON (((995851.9 20...
-3    15208961 MULTIPOLYGON (((998047.2 19...
-4    52267408 MULTIPOLYGON (((1005302 199...
-5     9982321 MULTIPOLYGON (((986367.7 19...
-6    23732978 MULTIPOLYGON (((990056.4 19...
-7    17534134 MULTIPOLYGON (((994554.2 19...
-8    14566585 MULTIPOLYGON (((994971 1871...
-9    10106807 MULTIPOLYGON (((990092 1964...
-10   36906699 MULTIPOLYGON (((999743.6 18...</code></pre>
-</div>
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">st_geometry</span>(nta), <span class="at">main =</span> <span class="st">"NYC Neighborhood Tabulation Areas"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># convert noise_data to an sf object (points) using latitude/longitude coordinates </span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>noise_sf <span class="ot">&lt;-</span> <span class="fu">st_as_sf</span>(noise_data, <span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"Longitude"</span>, <span class="st">"Latitude"</span>), <span class="at">crs =</span> <span class="dv">4326</span>, <span class="at">remove =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># load the NYC Neighborhood Tabulation Areas (NTAs) shapefile</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># modify the path to point to unzipped shapefile folder.</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>nta <span class="ot">&lt;-</span> <span class="fu">st_read</span>(<span class="st">"NYC_NTAs/nynta2020.shp"</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co"># inspect the spatial dataset</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(nta)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">st_geometry</span>(nta), <span class="at">main =</span> <span class="st">"NYC Neighborhood Tabulation Areas"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div>
@@ -389,85 +275,27 @@ First 10 features:
 </div>
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ensure both spatial datasets share the same CRS; if not, transform the noise data</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>noise_sf <span class="ot">&lt;-</span> <span class="fu">st_transform</span>(noise_sf, <span class="fu">st_crs</span>(nta))</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># perform a spatial join: find which noise complaint point falls inside each NTA polygon</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>noise_with_nta <span class="ot">&lt;-</span> <span class="fu">st_join</span>(noise_sf, nta, <span class="at">join =</span> st_intersects)</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co"># check results: the joined data now should include attributes from the NTA shapefile (e.g., NTA name, borough, etc.)</span></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(noise_with_nta)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>Rows: 682,077
-Columns: 52
-$ `Unique Key`                     &lt;dbl&gt; 56419009, 56419495, 56418047, 5641784…
-$ `Created Date`                   &lt;chr&gt; "01/01/2023 06:28:14 PM", "01/01/2023…
-$ `Closed Date`                    &lt;chr&gt; "01/01/2023 07:58:03 PM", "01/01/2023…
-$ Agency                           &lt;chr&gt; "NYPD", "NYPD", "NYPD", "NYPD", "DEP"…
-$ `Agency Name`                    &lt;chr&gt; "New York City Police Department", "N…
-$ `Complaint Type`                 &lt;chr&gt; "Noise - Residential", "Noise - Stree…
-$ Descriptor                       &lt;chr&gt; "Banging/Pounding", "Loud Music/Party…
-$ `Location Type`                  &lt;chr&gt; "Residential Building/House", "Street…
-$ `Incident Zip`                   &lt;dbl&gt; 11692, 10451, 10019, 10026, 10021, 10…
-$ `Incident Address`               &lt;chr&gt; "56-10 BEACH CHANNEL DRIVE", "462 EAS…
-$ `Street Name`                    &lt;chr&gt; "BEACH CHANNEL DRIVE", "EAST  160 STR…
-$ `Cross Street 1`                 &lt;chr&gt; "BEACH   56 STREET", "ELTON AVENUE", …
-$ `Cross Street 2`                 &lt;chr&gt; "BEACH   57 STREET", "WASHINGTON AVEN…
-$ `Intersection Street 1`          &lt;chr&gt; "BEACH   56 STREET", "ELTON AVENUE", …
-$ `Intersection Street 2`          &lt;chr&gt; "BEACH   57 STREET", "WASHINGTON AVEN…
-$ `Address Type`                   &lt;chr&gt; "ADDRESS", "ADDRESS", "ADDRESS", "ADD…
-$ City                             &lt;chr&gt; "ARVERNE", "BRONX", "NEW YORK", "NEW …
-$ Landmark                         &lt;chr&gt; "BEACH CHANNEL DRIVE", "EAST  160 STR…
-$ `Facility Type`                  &lt;chr&gt; NA, NA, NA, NA, "N/A", NA, NA, NA, NA…
-$ Status                           &lt;chr&gt; "Closed", "Closed", "Closed", "Closed…
-$ `Due Date`                       &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ `Resolution Description`         &lt;chr&gt; "The Police Department responded to t…
-$ `Resolution Action Updated Date` &lt;chr&gt; "01/01/2023 07:58:09 PM", "01/01/2023…
-$ `Community Board`                &lt;chr&gt; "14 QUEENS", "03 BRONX", "05 MANHATTA…
-$ Borough                          &lt;chr&gt; "QUEENS", "BRONX", "MANHATTAN", "MANH…
-$ `X Coordinate (State Plane)`     &lt;dbl&gt; 1043467, 1008587, 989294, 995950, 997…
-$ `Y Coordinate (State Plane)`     &lt;dbl&gt; 156099, 239104, 217303, 232719, 21961…
-$ `Park Facility Name`             &lt;chr&gt; "Unspecified", "Unspecified", "Unspec…
-$ `Park Borough`                   &lt;chr&gt; "QUEENS", "BRONX", "MANHATTAN", "MANH…
-$ `Vehicle Type`                   &lt;chr&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ `Taxi Company Borough`           &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ `Taxi Pick Up Location`          &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ `Bridge Highway Name`            &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ `Bridge Highway Direction`       &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ `Road Ramp`                      &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ `Bridge Highway Segment`         &lt;lgl&gt; NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
-$ Latitude                         &lt;dbl&gt; 40.59493, 40.82293, 40.76312, 40.8054…
-$ Longitude                        &lt;dbl&gt; -73.78677, -73.91207, -73.98179, -73.…
-$ Location                         &lt;chr&gt; "POINT (-73.78677255696932 40.5949340…
-$ Created_Date                     &lt;date&gt; 2023-01-01, 2023-01-01, 2023-01-01, …
-$ geometry                         &lt;POINT [US_survey_foot]&gt; POINT (1043467 156…
-$ BoroCode                         &lt;int&gt; 4, 2, 1, 1, 1, 2, 1, 3, 1, 4, 4, 4, 1…
-$ BoroName                         &lt;chr&gt; "Queens", "Bronx", "Manhattan", "Manh…
-$ CountyFIPS                       &lt;chr&gt; "081", "005", "061", "061", "061", "0…
-$ NTA2020                          &lt;chr&gt; "QN1402", "BX0301", "MN0502", "MN1001…
-$ NTAName                          &lt;chr&gt; "Rockaway Beach-Arverne-Edgemere", "M…
-$ NTAAbbrev                        &lt;chr&gt; "RckwyBch", "Mrrsnia", "Mdtwn_TmSq", …
-$ NTAType                          &lt;chr&gt; "0", "0", "0", "0", "0", "0", "0", "0…
-$ CDTA2020                         &lt;chr&gt; "QN14", "BX03", "MN05", "MN10", "MN08…
-$ CDTAName                         &lt;chr&gt; "QN14 The Rockaways (CD 14 Approximat…
-$ Shape_Leng                       &lt;dbl&gt; 67119.97, 21889.22, 21258.40, 16663.3…
-$ Shape_Area                       &lt;dbl&gt; 50502113, 13811174, 24552509, 1442641…</code></pre>
-</div>
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># drop geometry after the join to aggregate using non-spatial functions</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>noise_df <span class="ot">&lt;-</span> noise_with_nta <span class="sc">%&gt;%</span> </span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_set_geometry</span>(<span class="cn">NULL</span>)</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co"># aggregation: count number of complaints per NTA</span></span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>nta_summary <span class="ot">&lt;-</span> noise_df <span class="sc">%&gt;%</span> </span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(NTAName) <span class="sc">%&gt;%</span>    <span class="co"># Adjust NTAName to the correct field from the shapefile</span></span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_complaints =</span> <span class="fu">n</span>())</span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="co"># merge summary above back with the spatial NTA data for mapping</span></span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>nta_map <span class="ot">&lt;-</span> nta <span class="sc">%&gt;%</span></span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(nta_summary, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"NTAName"</span> <span class="ot">=</span> <span class="st">"NTAName"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ensure both spatial datasets share the same CRS; if not, transform the noise data</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>noise_sf <span class="ot">&lt;-</span> <span class="fu">st_transform</span>(noise_sf, <span class="fu">st_crs</span>(nta))</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># perform a spatial join: find which noise complaint point falls inside each NTA polygon</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>noise_with_nta <span class="ot">&lt;-</span> <span class="fu">st_join</span>(noise_sf, nta, <span class="at">join =</span> st_intersects)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># check results: the joined data now should include attributes from the NTA shapefile (e.g., NTA name, borough, etc.)</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(noise_with_nta)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co"># drop geometry after the join to aggregate using non-spatial functions</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>noise_df <span class="ot">&lt;-</span> noise_with_nta <span class="sc">%&gt;%</span> </span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_set_geometry</span>(<span class="cn">NULL</span>)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co"># aggregation: count number of complaints per NTA</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>nta_summary <span class="ot">&lt;-</span> noise_df <span class="sc">%&gt;%</span> </span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(NTAName) <span class="sc">%&gt;%</span>    <span class="co"># Adjust NTAName to the correct field from the shapefile</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">total_complaints =</span> <span class="fu">n</span>())</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="co"># merge summary above back with the spatial NTA data for mapping</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>nta_map <span class="ot">&lt;-</span> nta <span class="sc">%&gt;%</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(nta_summary, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"NTAName"</span> <span class="ot">=</span> <span class="st">"NTAName"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 </section>
@@ -477,14 +305,14 @@ $ Shape_Area                       &lt;dbl&gt; 50502113, 13811174, 24552509, 144
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># data visualization – initial choropleth</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> nta_map, <span class="fu">aes</span>(<span class="at">fill =</span> total_complaints), <span class="at">color =</span> <span class="st">"white"</span>, <span class="at">size =</span> <span class="fl">0.2</span>) <span class="sc">+</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>(<span class="at">option =</span> <span class="st">"magma"</span>, <span class="at">na.value =</span> <span class="st">"grey90"</span>, </span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>                     <span class="at">name =</span> <span class="st">"Noise Complaints"</span>) <span class="sc">+</span></span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Density of 311 Noise Complaints by Neighborhood"</span>,</span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"Data from 2022 to 2025"</span>) <span class="sc">+</span></span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># data visualization – initial choropleth</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> nta_map, <span class="fu">aes</span>(<span class="at">fill =</span> total_complaints), <span class="at">color =</span> <span class="st">"white"</span>, <span class="at">size =</span> <span class="fl">0.2</span>) <span class="sc">+</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>(<span class="at">option =</span> <span class="st">"magma"</span>, <span class="at">na.value =</span> <span class="st">"grey90"</span>, </span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>                     <span class="at">name =</span> <span class="st">"Noise Complaints"</span>) <span class="sc">+</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Density of 311 Noise Complaints by Neighborhood"</span>,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"Data from 2022 to 2025"</span>) <span class="sc">+</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div>
@@ -495,20 +323,20 @@ $ Shape_Area                       &lt;dbl&gt; 50502113, 13811174, 24552509, 144
 </div>
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># enhanced choropleth map with improved labels and theme</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> nta_map, <span class="fu">aes</span>(<span class="at">fill =</span> total_complaints), <span class="at">color =</span> <span class="st">"white"</span>, <span class="at">size =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>(<span class="at">option =</span> <span class="st">"magma"</span>, <span class="at">na.value =</span> <span class="st">"grey80"</span>,</span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>                     <span class="at">name =</span> <span class="st">"Total Noise Complaints"</span>,</span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>                     <span class="at">trans =</span> <span class="st">"sqrt"</span>) <span class="sc">+</span>  <span class="co"># Apply transformation if data are skewed</span></span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"311 Noise Complaints Density"</span>,</span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"NYC Neighborhoods (2022-2025)"</span>,</span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">caption =</span> <span class="st">"Data sources: NYC Open Data &amp; NYC Planning"</span>) <span class="sc">+</span></span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
-<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
-<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>),</span>
-<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.subtitle =</span> <span class="fu">element_text</span>(<span class="at">hjust =</span> <span class="fl">0.5</span>)</span>
-<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># enhanced choropleth map with improved labels and theme</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="at">data =</span> nta_map, <span class="fu">aes</span>(<span class="at">fill =</span> total_complaints), <span class="at">color =</span> <span class="st">"white"</span>, <span class="at">size =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>(<span class="at">option =</span> <span class="st">"magma"</span>, <span class="at">na.value =</span> <span class="st">"grey80"</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>                     <span class="at">name =</span> <span class="st">"Total Noise Complaints"</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>                     <span class="at">trans =</span> <span class="st">"sqrt"</span>) <span class="sc">+</span>  <span class="co"># Apply transformation if data are skewed</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"311 Noise Complaints Density"</span>,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span> <span class="st">"NYC Neighborhoods (2022-2025)"</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">caption =</span> <span class="st">"Data sources: NYC Open Data &amp; NYC Planning"</span>) <span class="sc">+</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">"bold"</span>, <span class="at">hjust =</span> <span class="fl">0.5</span>),</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">plot.subtitle =</span> <span class="fu">element_text</span>(<span class="at">hjust =</span> <span class="fl">0.5</span>)</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div>
@@ -518,6 +346,17 @@ $ Shape_Area                       &lt;dbl&gt; 50502113, 13811174, 24552509, 144
 </div>
 </div>
 </div>
+<section id="what-the-rawcount-maps-tell-us" class="level3">
+<h3 class="anchored" data-anchor-id="what-the-rawcount-maps-tell-us">What the raw‑count maps tell us</h3>
+<ul>
+<li><strong>Same data, two treatments</strong>&nbsp;–&nbsp;The first map gives a straight choropleth; the second applies a square‑root colour scale and tweaked labels. Both confirm that complaints cluster along Manhattan’s east‑west nightlife corridor and spill into Williamsburg and Bushwick.<br>
+</li>
+<li><strong>Hot‑block clustering</strong>&nbsp;–&nbsp;Midtown/Hell’s Kitchen tops the chart, followed by the East Village–Lower East Side strip. Brooklyn’s waterfront NTAs (Greenpoint → Williamsburg) form a secondary ridge.<br>
+</li>
+<li><strong>Borough contrast</strong>&nbsp;–&nbsp;Queens, the Bronx, and Staten Island remain largely pale, reminding us that sheer call counts favour dense, mixed‑use zones where residential and entertainment land uses collide.<br>
+<em>Key takeaway: raw totals are useful for workload planning (e.g., 311 staffing), but they over‑weight large or highly visited areas.</em></li>
+</ul>
+</section>
 </section>
 <section id="normalization-by-population-area" class="level2">
 <h2 class="anchored" data-anchor-id="normalization-by-population-area">5. Normalization by Population &amp; Area</h2>
@@ -525,87 +364,81 @@ $ Shape_Area                       &lt;dbl&gt; 50502113, 13811174, 24552509, 144
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># normalize neighborhood &amp; population</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)    <span class="co"># data wrangling + ggplot2</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)           <span class="co"># spatial data</span></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)    <span class="co"># date parsing</span></span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(viridis)      <span class="co"># color scales</span></span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidycensus)   <span class="co"># pull ACS</span></span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tigris)       <span class="co"># tract geometries</span></span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="co"># enable caching for tigris shapefiles</span></span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">tigris_use_cache =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="co"># only need to do this once; replace with own key:</span></span>
-<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a><span class="fu">census_api_key</span>(<span class="st">"22a5ec760da61309b7cc897d007f1f24004b768e"</span>, <span class="at">install =</span> <span class="cn">TRUE</span>, <span class="at">overwrite =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div class="cell-output cell-output-stdout">
-<pre><code>[1] "22a5ec760da61309b7cc897d007f1f24004b768e"</code></pre>
-</div>
-<details class="code-fold">
-<summary>Code</summary>
-<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">readRenviron</span>(<span class="st">"~/.Renviron"</span>)</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="co"># pull ACS population at the TRACT level </span></span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="co"># we'll get total population (variable B01003_001) for all NYC tracts</span></span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>pop_tracts <span class="ot">&lt;-</span> <span class="fu">get_acs</span>(</span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">geography =</span> <span class="st">"tract"</span>,</span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">variables =</span> <span class="st">"B01003_001"</span>,</span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">year      =</span> <span class="dv">2021</span>,</span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">state     =</span> <span class="st">"NY"</span>,</span>
-<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">county    =</span> <span class="fu">c</span>(<span class="st">"Bronx"</span>,<span class="st">"Kings"</span>,<span class="st">"New York"</span>,<span class="st">"Queens"</span>,<span class="st">"Richmond"</span>),</span>
-<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">geometry  =</span> <span class="cn">TRUE</span>,</span>
-<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">cache_table =</span> <span class="cn">TRUE</span></span>
-<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
-<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="fu">st_crs</span>(nta_map))</span>
-<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a><span class="co"># assign each tract to an NTA via centroid → spatial join </span></span>
-<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>tract_centroids <span class="ot">&lt;-</span> <span class="fu">st_centroid</span>(pop_tracts)</span>
-<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>tracts_with_nta <span class="ot">&lt;-</span> <span class="fu">st_join</span>(</span>
-<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>  tract_centroids,</span>
-<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>  nta_map <span class="sc">%&gt;%</span> <span class="fu">select</span>(NTAName),</span>
-<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">join =</span> st_intersects</span>
-<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>nta_pop <span class="ot">&lt;-</span> tracts_with_nta <span class="sc">%&gt;%</span></span>
-<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_set_geometry</span>(<span class="cn">NULL</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(NTAName) <span class="sc">%&gt;%</span></span>
-<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
-<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a>    <span class="at">population =</span> <span class="fu">sum</span>(estimate, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb21-30"><a href="#cb21-30" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb21-31"><a href="#cb21-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-32"><a href="#cb21-32" aria-hidden="true" tabindex="-1"></a><span class="co"># compute NTA area (sq miles) &amp; merge population </span></span>
-<span id="cb21-33"><a href="#cb21-33" aria-hidden="true" tabindex="-1"></a>nta_map <span class="ot">&lt;-</span> nta_map <span class="sc">%&gt;%</span></span>
-<span id="cb21-34"><a href="#cb21-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb21-35"><a href="#cb21-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">area_m2 =</span> <span class="fu">st_area</span>(geometry),                        <span class="co"># in square meters</span></span>
-<span id="cb21-36"><a href="#cb21-36" aria-hidden="true" tabindex="-1"></a>    <span class="at">area_sq_mi =</span> <span class="fu">as.numeric</span>(area_m2) <span class="sc">*</span> <span class="fl">0.000000386102159</span></span>
-<span id="cb21-37"><a href="#cb21-37" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb21-38"><a href="#cb21-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(nta_pop, <span class="at">by =</span> <span class="st">"NTAName"</span>)</span>
-<span id="cb21-39"><a href="#cb21-39" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-40"><a href="#cb21-40" aria-hidden="true" tabindex="-1"></a><span class="co"># normalize complaints by population &amp; area </span></span>
-<span id="cb21-41"><a href="#cb21-41" aria-hidden="true" tabindex="-1"></a>nta_map <span class="ot">&lt;-</span> nta_map <span class="sc">%&gt;%</span></span>
-<span id="cb21-42"><a href="#cb21-42" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb21-43"><a href="#cb21-43" aria-hidden="true" tabindex="-1"></a>    <span class="at">complaints_per_1000  =</span> total_complaints <span class="sc">/</span> (population <span class="sc">/</span> <span class="dv">1000</span>),</span>
-<span id="cb21-44"><a href="#cb21-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">complaints_per_sq_mi =</span> total_complaints <span class="sc">/</span> area_sq_mi</span>
-<span id="cb21-45"><a href="#cb21-45" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb21-46"><a href="#cb21-46" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-47"><a href="#cb21-47" aria-hidden="true" tabindex="-1"></a><span class="co"># visualize normalized metrics</span></span>
-<span id="cb21-48"><a href="#cb21-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-49"><a href="#cb21-49" aria-hidden="true" tabindex="-1"></a><span class="co"># complaints per 1,000 residents</span></span>
-<span id="cb21-50"><a href="#cb21-50" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(nta_map) <span class="sc">+</span></span>
-<span id="cb21-51"><a href="#cb21-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> complaints_per_1000), <span class="at">color =</span> <span class="st">"white"</span>, <span class="at">size =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
-<span id="cb21-52"><a href="#cb21-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>(</span>
-<span id="cb21-53"><a href="#cb21-53" aria-hidden="true" tabindex="-1"></a>    <span class="at">option   =</span> <span class="st">"plasma"</span>,</span>
-<span id="cb21-54"><a href="#cb21-54" aria-hidden="true" tabindex="-1"></a>    <span class="at">name     =</span> <span class="st">"Complaints</span><span class="sc">\n</span><span class="st">per 1,000"</span>,</span>
-<span id="cb21-55"><a href="#cb21-55" aria-hidden="true" tabindex="-1"></a>    <span class="at">na.value =</span> <span class="st">"grey90"</span></span>
-<span id="cb21-56"><a href="#cb21-56" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb21-57"><a href="#cb21-57" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb21-58"><a href="#cb21-58" aria-hidden="true" tabindex="-1"></a>    <span class="at">title    =</span> <span class="st">"311 Noise Complaints (per 1,000 residents)"</span>,</span>
-<span id="cb21-59"><a href="#cb21-59" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"NYC NTAs, 2022–2025"</span></span>
-<span id="cb21-60"><a href="#cb21-60" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb21-61"><a href="#cb21-61" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># normalize neighborhood &amp; population</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)    <span class="co"># data wrangling + ggplot2</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)           <span class="co"># spatial data</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)    <span class="co"># date parsing</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(viridis)      <span class="co"># color scales</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidycensus)   <span class="co"># pull ACS</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tigris)       <span class="co"># tract geometries</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="co"># enable caching for tigris shapefiles</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span>(<span class="at">tigris_use_cache =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co"># only need to do this once; replace with own key:</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="fu">census_api_key</span>(<span class="st">"22a5ec760da61309b7cc897d007f1f24004b768e"</span>, <span class="at">install =</span> <span class="cn">TRUE</span>, <span class="at">overwrite =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="fu">readRenviron</span>(<span class="st">"~/.Renviron"</span>)</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="co"># pull ACS population at the TRACT level </span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="co"># we'll get total population (variable B01003_001) for all NYC tracts</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>pop_tracts <span class="ot">&lt;-</span> <span class="fu">get_acs</span>(</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">geography =</span> <span class="st">"tract"</span>,</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">variables =</span> <span class="st">"B01003_001"</span>,</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">year      =</span> <span class="dv">2021</span>,</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">state     =</span> <span class="st">"NY"</span>,</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">county    =</span> <span class="fu">c</span>(<span class="st">"Bronx"</span>,<span class="st">"Kings"</span>,<span class="st">"New York"</span>,<span class="st">"Queens"</span>,<span class="st">"Richmond"</span>),</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">geometry  =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">cache_table =</span> <span class="cn">TRUE</span></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>) <span class="sc">%&gt;%</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="fu">st_crs</span>(nta_map))</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a><span class="co"># assign each tract to an NTA via centroid → spatial join </span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>tract_centroids <span class="ot">&lt;-</span> <span class="fu">st_centroid</span>(pop_tracts)</span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>tracts_with_nta <span class="ot">&lt;-</span> <span class="fu">st_join</span>(</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>  tract_centroids,</span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>  nta_map <span class="sc">%&gt;%</span> <span class="fu">select</span>(NTAName),</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>  <span class="at">join =</span> st_intersects</span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>nta_pop <span class="ot">&lt;-</span> tracts_with_nta <span class="sc">%&gt;%</span></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_set_geometry</span>(<span class="cn">NULL</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(NTAName) <span class="sc">%&gt;%</span></span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>    <span class="at">population =</span> <span class="fu">sum</span>(estimate, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a><span class="co"># compute NTA area (sq miles) &amp; merge population </span></span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>nta_map <span class="ot">&lt;-</span> nta_map <span class="sc">%&gt;%</span></span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>    <span class="at">area_m2 =</span> <span class="fu">st_area</span>(geometry),                        <span class="co"># in square meters</span></span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a>    <span class="at">area_sq_mi =</span> <span class="fu">as.numeric</span>(area_m2) <span class="sc">*</span> <span class="fl">0.000000386102159</span></span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(nta_pop, <span class="at">by =</span> <span class="st">"NTAName"</span>)</span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a><span class="co"># normalize complaints by population &amp; area </span></span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a>nta_map <span class="ot">&lt;-</span> nta_map <span class="sc">%&gt;%</span></span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a>    <span class="at">complaints_per_1000  =</span> total_complaints <span class="sc">/</span> (population <span class="sc">/</span> <span class="dv">1000</span>),</span>
+<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a>    <span class="at">complaints_per_sq_mi =</span> total_complaints <span class="sc">/</span> area_sq_mi</span>
+<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a><span class="co"># visualize normalized metrics</span></span>
+<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a><span class="co"># complaints per 1,000 residents</span></span>
+<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(nta_map) <span class="sc">+</span></span>
+<span id="cb7-65"><a href="#cb7-65" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> complaints_per_1000), <span class="at">color =</span> <span class="st">"white"</span>, <span class="at">size =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
+<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>(</span>
+<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a>    <span class="at">option   =</span> <span class="st">"plasma"</span>,</span>
+<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a>    <span class="at">name     =</span> <span class="st">"Complaints</span><span class="sc">\n</span><span class="st">per 1,000"</span>,</span>
+<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a>    <span class="at">na.value =</span> <span class="st">"grey90"</span></span>
+<span id="cb7-70"><a href="#cb7-70" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb7-71"><a href="#cb7-71" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb7-72"><a href="#cb7-72" aria-hidden="true" tabindex="-1"></a>    <span class="at">title    =</span> <span class="st">"311 Noise Complaints (per 1,000 residents)"</span>,</span>
+<span id="cb7-73"><a href="#cb7-73" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"NYC NTAs, 2022–2025"</span></span>
+<span id="cb7-74"><a href="#cb7-74" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb7-75"><a href="#cb7-75" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div>
@@ -616,19 +449,19 @@ $ Shape_Area                       &lt;dbl&gt; 50502113, 13811174, 24552509, 144
 </div>
 <details class="code-fold">
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># complaints per square mile</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(nta_map) <span class="sc">+</span></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> complaints_per_sq_mi), <span class="at">color =</span> <span class="st">"white"</span>, <span class="at">size =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>(</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">option   =</span> <span class="st">"magma"</span>,</span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">name     =</span> <span class="st">"Complaints</span><span class="sc">\n</span><span class="st">per sq mile"</span>,</span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">na.value =</span> <span class="st">"grey90"</span></span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">title    =</span> <span class="st">"311 Noise Complaints (per sq mile)"</span>,</span>
-<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"NYC NTAs, 2022–2025"</span></span>
-<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># complaints per square mile</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(nta_map) <span class="sc">+</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_sf</span>(<span class="fu">aes</span>(<span class="at">fill =</span> complaints_per_sq_mi), <span class="at">color =</span> <span class="st">"white"</span>, <span class="at">size =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>(</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">option   =</span> <span class="st">"magma"</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">name     =</span> <span class="st">"Complaints</span><span class="sc">\n</span><span class="st">per sq mile"</span>,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">na.value =</span> <span class="st">"grey90"</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">title    =</span> <span class="st">"311 Noise Complaints (per sq mile)"</span>,</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"NYC NTAs, 2022–2025"</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output-display">
 <div>
@@ -638,7 +471,32 @@ $ Shape_Area                       &lt;dbl&gt; 50502113, 13811174, 24552509, 144
 </div>
 </div>
 </div>
-<p><em>Key observations:</em></p>
+</section>
+<section id="reading-the-normalized-maps" class="level2">
+<h2 class="anchored" data-anchor-id="reading-the-normalized-maps">Reading the normalized maps</h2>
+<ol type="1">
+<li><strong>Complaints per 1,000 residents</strong>
+<ul>
+<li><em>Where residents feel it most</em>&nbsp;–&nbsp;Times Square, the Financial District, and the East&nbsp;Village all exceed <strong>8–10 calls per 1 k residents</strong>, roughly four times the city median.<br>
+</li>
+<li><em>Tourist effect</em>&nbsp;–&nbsp;These zones have small residential bases but huge visitor flows, so each call counts heavily on a per‑capita scale.</li>
+</ul></li>
+<li><strong>Complaints per sq mile</strong>
+<ul>
+<li><em>Spatial saturation</em>&nbsp;–&nbsp;From 14th St to 59th St, Hudson to East River, several NTAs surpass <strong>1,200 calls / sq mi</strong>. Compact Brooklyn nightlife pockets (Bushwick, parts of Bedford–Stuyvesant) also jump in rank.<br>
+</li>
+<li><em>Outer‑borough quiet</em>&nbsp;–&nbsp;Eastern Queens and most of Staten Island fall below <strong>100 calls / sq mi</strong>, illustrating how land‑use intensity shapes acoustic experience.</li>
+</ul></li>
+<li><strong>Putting the two lenses together</strong>
+<ul>
+<li><strong>Dual-burden districts</strong> (East Village, Lower East Side, Williamsburg) score high on <em>both</em> metrics—lots of calls per person <em>and</em> per land unit—flagging them as prime targets for noise‑mitigation policy.<br>
+</li>
+<li><strong>Divergent stories</strong>&nbsp;–&nbsp;Some dense residential areas (e.g., Harlem) rank high per‑sq‑mile but middle‑of‑the‑pack per‑capita, suggesting calls scale more with built form than with population alone.</li>
+</ul></li>
+</ol>
+<p><em>Takeaway:</em> Normalization reveals that the loudest places are not always the most populous—they’re the ones where nightlife, tourism, and tight urban form intersect.</p>
+<section id="quick-recap-of-rawview-observations" class="level4">
+<h4 class="anchored" data-anchor-id="quick-recap-of-rawview-observations">Quick recap of raw‑view observations</h4>
 <ul>
 <li><strong>Manhattan nightlife hubs pop first</strong>—East Village, Lower East Side, and Midtown rack up the biggest raw call totals.<br>
 </li>
@@ -648,28 +506,110 @@ $ Shape_Area                       &lt;dbl&gt; 50502113, 13811174, 24552509, 144
 </ul>
 </section>
 </section>
+</section>
 <section id="conclusions-next-steps" class="level1">
-<h1>Conclusions &amp; Next Steps</h1>
-<p>Putting it all together, our reproducible pipeline shows:</p>
+<h1>Conclusions&nbsp;&amp;&nbsp;Next&nbsp;Steps</h1>
+<section id="what-we-now-know" class="level3">
+<h3 class="anchored" data-anchor-id="what-we-now-know">What we now know</h3>
 <ul>
-<li>Imported and cleaned 311 noise complaint data (2022–2025).<br>
+<li><strong>Noise is hyper‑concentrated.</strong>&nbsp;Five Manhattan NTAs—East Village, Lower East Side, Midtown/Hell’s Kitchen, Times Square, and the Financial District—sit at the top whether we measure by people, by land, or by sheer call volume.<br>
 </li>
-<li>Mapped each complaint to its NTA via spatial join.<br>
+<li><strong>Tourist/commercial zones skew per‑capita rates.</strong>&nbsp;Small resident bases plus heavy foot‑traffic push per‑1 k‑resident complaints far above city norms.<br>
 </li>
-<li>Normalized complaint counts by both population and area.<br>
+<li><strong>Brooklyn’s nightlife crescent is rising.</strong>&nbsp;Williamsburg and Bushwick don’t match Manhattan on totals, but they rival it once you adjust for density—hinting at an emerging second hotspot.<br>
 </li>
-<li>Visualized raw and density‑based metrics to identify true noise hotspots.</li>
+<li><strong>Quiet isn’t just geographic, it’s regulatory.</strong>&nbsp;Outer‑borough areas with strict residential zoning and earlier liquor‑license curfews consistently appear in the bottom quartile for both metrics.</li>
 </ul>
-<p>Our analysis conclusively shows that Manhattan’s core neighborhoods—particularly the East Village, Lower East Side, Midtown/Hell’s Kitchen, Times Square, and the Financial District—register the highest complaint densities under all measures. Brooklyn’s Williamsburg and Bushwick form a secondary tier, while outer boroughs show substantially lower densities once adjusted.</p>
-<p><strong>Future work could include:</strong></p>
+</section>
+<section id="shortterm-actions" class="level3">
+<h3 class="anchored" data-anchor-id="shortterm-actions">Short‑term actions</h3>
 <ol type="1">
-<li>Statistical hotspot detection (e.g., Local Moran’s I) to confirm significance.<br>
+<li><strong>Targeted field inspections</strong>
+<ul>
+<li>Deploy NYC DEP/311 “noise teams” on Thursday‑to‑Sunday nights in the dual‑burden NTAs (East Village, L.E.S., Williamsburg).<br>
 </li>
-<li>Causal analysis around policy or zoning changes (difference‑in‑differences).<br>
+<li>Track violation types (music, construction, traffic) to fine‑tune response protocols.</li>
+</ul></li>
+<li><strong>Pilot sound‑mitigation grants</strong>
+<ul>
+<li>Offer small business subsidies for soundproofing measures in bars or clubs located within the top‑decile NTAs.<br>
 </li>
-<li>Integration with nightlife license or police response data for deeper insights.</li>
+<li>Evaluate uptake and complaint deltas after six months.</li>
+</ul></li>
+<li><strong>Community feedback loop</strong>
+<ul>
+<li>Embed this dashboard in community‑board packets; solicit resident comments on whether hotspot boundaries align with lived experience.</li>
+</ul></li>
 </ol>
-<p>This document provides a transparent, reproducible foundation for understanding and addressing urban noise in New York City.</p>
+</section>
+<section id="longerterm-analytics" class="level3">
+<h3 class="anchored" data-anchor-id="longerterm-analytics">Longer‑term analytics</h3>
+<ul>
+<li><strong>Hotspot significance tests</strong>&nbsp;Run Local Moran’s I or Getis‑Ord Gi* on the complaint counts to confirm whether clusters are statistically “hot” or random noise.<br>
+</li>
+<li><strong>Difference‑in‑differences on policy shifts</strong>&nbsp;If a borough changes bar‑closing hours or imposes new construction curfews, compare complaint trajectories with a control borough that did not.<br>
+</li>
+<li><strong>Machine‑learning prediction</strong>&nbsp;Feed historical 311 calls plus zoning, nightlife‑license counts, and transit foot‑traffic into a random‑forest model to predict next‑season hotspots and pre‑emptively allocate inspectors.</li>
+</ul>
+</section>
+<section id="policy-research-roadmap" class="level3">
+<h3 class="anchored" data-anchor-id="policy-research-roadmap">Policy &amp; research roadmap</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 18%">
+<col style="width: 28%">
+<col style="width: 26%">
+<col style="width: 26%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Horizon</th>
+<th>Key Question</th>
+<th>Data Needed</th>
+<th>Deliverable</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>0–6 mo</strong></td>
+<td>Can enforcement cadences reduce calls by&nbsp;≥15 % in a hotspot?</td>
+<td>Shift‑level inspection logs; updated 311 complaints</td>
+<td>Before/after evaluation memo</td>
+</tr>
+<tr class="even">
+<td><strong>6–12 mo</strong></td>
+<td>Which business profiles respond best to soundproofing grants?</td>
+<td>Grant uptake; follow‑up complaints per address</td>
+<td>Cost‑effectiveness report</td>
+</tr>
+<tr class="odd">
+<td><strong>12–24 mo</strong></td>
+<td>Do zoning tweaks or license caps measurably move the hotspot map?</td>
+<td>Building‑permit &amp; SLA license data, complaint geocodes</td>
+<td>Peer‑reviewed journal article</td>
+</tr>
+</tbody>
+</table>
+<p><em>Bottom line:</em> The city doesn’t need blanket noise regulation; it needs a <strong>surgical, data‑guided approach</strong> pairing on‑the‑ground enforcement with structural incentives in the handful of NTAs where complaints pile up the fastest.</p>
+</section>
+</section>
+<section id="references" class="level1">
+<h1>References</h1>
+<ul>
+<li><strong>New&nbsp;York City Open Data.</strong> “311&nbsp;Service Requests” (Noise Complaint subset), accessed&nbsp;2025-05-20 — https://data.cityofnewyork.us/<br>
+</li>
+<li><strong>NYC Department of City Planning.</strong> “Neighborhood Tabulation Areas (NTA 2020)” shapefile, accessed&nbsp;May&nbsp;2025 — https://www1.nyc.gov/site/planning/data-maps/open-data/dwn-nynta.page<br>
+</li>
+<li><strong>U.S.&nbsp;Census Bureau.</strong> American Community Survey 5‑Year Estimates (Table&nbsp;B01003: Total Population), 2021 release — https://www.census.gov/programs-surveys/acs<br>
+</li>
+<li>Pebesma, E.&nbsp;(2018). <em>Simple Features for R: Standardized Support for Spatial Vector Data.</em>&nbsp;<strong>The&nbsp;R&nbsp;Journal</strong>,&nbsp;10(1),&nbsp;439‑446.<br>
+</li>
+<li>Wickham, H.&nbsp;et&nbsp;al.&nbsp;(2019). <em>Welcome to the tidyverse.</em>&nbsp;<strong>Journal of Open Source Software</strong>,&nbsp;4(43),&nbsp;1686.<br>
+</li>
+<li>Hijmans, R.&nbsp;J.,&nbsp;&amp;&nbsp;van&nbsp;Etten, J.&nbsp;(2012). <em>Raster: Geographic data analysis and modeling.</em>&nbsp;R&nbsp;package version&nbsp;3.6‑14.</li>
+</ul>
+<hr>
+<p>Last Updated: Tuesday 05 20, 2025 at 17:03PM</p>
 
 
 </section>
